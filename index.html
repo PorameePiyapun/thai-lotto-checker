@@ -356,7 +356,7 @@
 
     html5Scanner.start(
         { facingMode: "environment" },  // <- Fix here
-        { fps: 10, qrbox: 200 },
+        { fps: 10, qrbox: 50 },
         (decodedText) => {
             let match = decodedText.match(/\d{6}/);
             if (!match) return;
@@ -611,7 +611,6 @@
         newInput.value = initialValue; // Set value (for scanner)
         
         container.appendChild(newInput);
-        newInput.focus(); // Auto-focus the new input
     }
 
     // ===========================================
@@ -703,3 +702,4 @@
 
 </body>
 </html>
+
