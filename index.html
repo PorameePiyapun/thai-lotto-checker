@@ -357,7 +357,7 @@
 
         html5Scanner.start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 150 } }, // Rectangular box
+            { fps: 10, qrbox: { width: 100, height: 100 } }, // Rectangular box
             (decodedText) => { // OnScanSuccess
                 
                 let match = decodedText.match(/\d{6}/); // Find first 6-digit sequence
@@ -611,4 +611,5 @@
 </script>
 
 </body>
+
 </html>
