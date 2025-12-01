@@ -22,8 +22,6 @@
             --primary-hover: #005fcc;
             --secondary-color: #6c757d;
             --secondary-hover: #5a6268;
-            --danger-color: #dc3545; /* New for Reset */
-            --danger-hover: #c82333;
             --prize-box-bg: #f0f5ff;
             --prize-box-border: #0078ff;
             --prize-first-color: #d9534f;
@@ -44,8 +42,6 @@
             --primary-hover: #0078ff;
             --secondary-color: #888;
             --secondary-hover: #aaa;
-            --danger-color: #e74c3c;
-            --danger-hover: #c0392b;
             --prize-box-bg: #1a2230;
             --prize-box-border: #0098ff;
             --prize-first-color: #ff6b6b;
@@ -80,6 +76,7 @@
             line-height: 40px;
             text-align: center;
             cursor: pointer;
+            font-family: 'Sarabun', Arial, sans-serif;
             z-index: 10;
         }
         
@@ -168,13 +165,21 @@
         button:hover {
             background: var(--primary-hover);
         }
-
+        
+        /* New Reset Button Style */
         .reset-button {
-            background: var(--danger-color);
-            margin-top: 15px;
+            background: #ffffff; /* White background */
+            color: #333;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            width: auto; /* Small width */
+            padding: 8px 16px;
+            display: block;
+            margin: 15px auto 0 auto;
+            font-weight: normal;
         }
         .reset-button:hover {
-            background: var(--danger-hover);
+            background: #f0f0f0;
         }
         
         @media (min-width: 600px) {
@@ -207,24 +212,23 @@
         #multiResult {
             text-align: left;
             margin-top: 15px;
-            max-height: 250px;
+            max-height: 200px;
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 10px;
             background-color: var(--result-multi-bg);
-            display: none; /* Hide when empty */
+        }
+        #multiResult:empty {
+            display: none;
         }
         .res-line {
-            padding: 6px;
+            padding: 4px;
             border-bottom: 1px solid var(--border-color);
-            font-size: 1.1rem;
         }
         .res-win {
             font-weight: 700;
             color: var(--result-win-color);
-            background-color: rgba(93, 207, 133, 0.1);
-            border-radius: 4px;
         }
         .res-lose {
             color: var(--result-lose-color);
@@ -234,9 +238,7 @@
             font-style: italic;
         }
 
-        /* ============================ */
-        /* === Scanner Modal UI === */
-        /* ============================ */
+        /* Scanner Modal UI */
         #reader-overlay {
             display: none;
             position: fixed;
@@ -244,11 +246,10 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 100;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
         }
         #reader-box {
             width: 90%;
@@ -257,10 +258,10 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            text-align: center;
         }
         #reader-text {
             color: var(--text-color);
+            text-align: center;
             font-size: 1.2rem;
             font-weight: 700;
             margin-bottom: 15px;
@@ -270,7 +271,6 @@
             border-radius: 8px;
             overflow: hidden;
             border: 1px solid var(--border-color);
-            background: #000;
         }
     </style>
 </head>
@@ -306,33 +306,32 @@
         
         <h3>ตรวจหมายเลขของคุณ</h3>
         <div id="multiInputContainer">
-            <input type="number" pattern="\d*" inputmode="numeric" maxlength="6" placeholder="กรอกเลข 6 หลัก" class="multi-input" />
+            <input type="text" maxlength="6" placeholder="กรอกเลข 6 หลัก" class="multi-input" />
         </div>
-        <button onclick="addInputSlot()" class="secondary-button">+ เพิ่มช่องกรอกเลข</button>
+        <button onclick="addInputSlot(true)" class="secondary-button">+ เพิ่มช่องกรอกเลข</button>
         <button onclick="startScan()" class="secondary-button">สแกนบาร์โค้ด</button>
         
         <button onclick="checkAllSlots()" style="margin-top: 15px;">ตรวจผล</button>
-        
         <div id="multiResult"></div>
-        <div id="totalPrize" style="margin-top:10px; font-weight:bold; text-align: center; font-size: 1.2rem; color: var(--primary-color);"></div>
+        <div id="totalPrize" style="margin-top:10px; font-weight:bold;"></div>
 
-        <button onclick="resetApp()" class="reset-button">🔄 เริ่มใหม่ (Reset)</button>
+        <button onclick="resetApp()" class="reset-button">↺ รีเซ็ต (เริ่มใหม่)</button>
     </div>
 
     <div id="reader-overlay">
         <div id="reader-box">
             <div id="reader-text">สแกนแล้ว: 0 ใบ</div>
             <div id="reader-video"></div> 
-            <button id="reader-close-btn" class="secondary-button" style="margin-top: 15px;">เสร็จสิ้น & ดูผล</button>
+            <button id="reader-close-btn" class="secondary-button" style="margin-top: 15px;">เสร็จสิ้น & ตรวจสอบ</button>
         </div>
     </div>
 
 <script>
     let scannerRunning = false;
     let html5Scanner = null;
-    let winningData = null; 
-    let apiLottoDate = "";  
-    let scannedNumbers = []; 
+    let winningData = null; // Global variable to hold prize data
+    let apiLottoDate = "";  // Global variable for the date
+    let scannedNumbers = []; // Holds numbers from one scan session
 
     // --- Dark Mode Logic ---
     const themeToggle = document.getElementById('themeToggle');
@@ -355,9 +354,7 @@
         localStorage.setItem('theme', theme);
     });
 
-    // ===========================================
-    // === UPDATED: Scan function (Smart Camera Selection) ===
-    // ===========================================
+    // --- Scan function (Unchanged logic) ---
     function startScan() {
         if (scannerRunning) return;
 
@@ -365,114 +362,92 @@
         document.getElementById("reader-text").innerText = "สแกนแล้ว: 0 ใบ";
         document.getElementById("reader-overlay").style.display = "flex";
 
-        // 1. Get List of Cameras first
-        Html5Qrcode.getCameras().then(devices => {
-            if (devices && devices.length) {
-                let cameraId = devices[0].id; // Default to first
-
-                // 2. Filter Logic: Find the "Back" camera, avoid "Wide/Ultra"
-                // Many phones list Wide cam as "Back Camera 0" or similar. We want the normal one.
-                const backCameras = devices.filter(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear'));
-                
-                if (backCameras.length > 0) {
-                    // If we have back cameras, try to find one that IS NOT wide
-                    const normalCameras = backCameras.filter(d => {
-                        const label = d.label.toLowerCase();
-                        return !label.includes('wide') && !label.includes('ultra') && !label.includes('0.5');
-                    });
-
-                    if (normalCameras.length > 0) {
-                        // Use the first "normal" back camera found
-                        cameraId = normalCameras[0].id;
-                    } else {
-                        // Fallback to any back camera
-                        cameraId = backCameras[0].id;
-                    }
-                }
-                
-                // 3. Start Scanner with specific Camera ID
-                startScannerWithId(cameraId);
-            } else {
-                // No cameras found, try generic environment mode
-                startScannerWithId(null);
-            }
-        }).catch(err => {
-            console.error("Permission error", err);
-            alert("ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตให้ใช้กล้อง");
-            document.getElementById("reader-overlay").style.display = "none";
-        });
-    }
-
-    function startScannerWithId(cameraId) {
-        html5Scanner = new Html5Qrcode("reader-video");
-        scannerRunning = true;
-
-        const config = { 
-            fps: 10, 
-            qrbox: 250,
-            formatsToSupport: [ Html5QrcodeSupportedFormats.DATA_MATRIX, Html5QrcodeSupportedFormats.QR_CODE ]
+        const scannerConfig = {
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.DATA_MATRIX,
+                Html5QrcodeSupportedFormats.QR_CODE
+            ]
         };
 
-        // Determine settings based on whether we found a specific ID
-        const cameraSettings = cameraId ? { deviceId: { exact: cameraId } } : { facingMode: "environment" };
+        html5Scanner = new Html5Qrcode("reader-video", scannerConfig);
+        scannerRunning = true;
 
         html5Scanner.start(
-            cameraSettings, 
-            config,
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 50 },
             (decodedText) => {
-                // Regex to find 6 digits in the barcode
                 let match = decodedText.match(/\d{6}/);
                 if (!match) return;
 
                 let digits = match[0];
                 if (!scannedNumbers.includes(digits)) {
                     scannedNumbers.push(digits);
-                    document.getElementById("reader-text").innerText = `สแกนแล้ว: ${scannedNumbers.length} ใบ\n(${digits})`;
-                    if (navigator.vibrate) navigator.vibrate(100);
+                    document.getElementById("reader-text").innerText = `สแกนแล้ว: ${scannedNumbers.length} ใบ`;
+                    if (navigator.vibrate) navigator.vibrate(50);
                 }
             },
             (errorMessage) => {
-                // console.log(errorMessage); // Ignore parse errors
+                console.error("Scan error:", errorMessage);
             }
         ).catch(err => {
-            console.error("Start failed", err);
-            // Retry with generic environment if exact ID failed
-            if(cameraId) startScannerWithId(null);
+            console.error("Cannot start camera:", err);
         });
     }
 
-
-    // ===========================================
-    // === Function to stop scanning and process ===
-    // ===========================================
+    // --- Stop Scan & Check ---
     function stopScanAndCheck() {
         if (scannerRunning && html5Scanner) {
             try {
-                html5Scanner.stop().then(() => {
-                    html5Scanner.clear();
-                });
-            } catch (e) { console.error(e); }
+                html5Scanner.stop();
+            } catch (e) {
+                console.error("Error stopping scanner:", e);
+            }
         }
         document.getElementById("reader-overlay").style.display = "none";
         scannerRunning = false;
 
-        if (scannedNumbers.length === 0) return; 
+        if (scannedNumbers.length === 0) return; // User scanned nothing
         
-        // Clear existing empty inputs first to avoid clutter
-        const container = document.getElementById('multiInputContainer');
-        container.innerHTML = '';
-
-        // Add all scanned numbers
-        scannedNumbers.forEach(num => {
-            addInputSlot(num);
+        // Fill inputs
+        let allInputs = document.querySelectorAll('#multiInputContainer .multi-input');
+        let emptyInputs = [];
+        allInputs.forEach(input => {
+            if (input.value.trim() === '') {
+                emptyInputs.push(input);
+            }
         });
 
-        // Immediately check results
+        scannedNumbers.forEach((num, index) => {
+            if (index < emptyInputs.length) {
+                // Fill empty slots first
+                emptyInputs[index].value = num;
+            } else {
+                // Add new slots if needed, AND FOCUS
+                addInputSlot(num, true);
+            }
+        });
+
         checkAllSlots();
     }
     
     document.getElementById("reader-close-btn").addEventListener('click', stopScanAndCheck);
 
+    // --- Reset Function (UPDATED) ---
+    function resetApp() {
+        // Clear all inputs
+        const container = document.getElementById('multiInputContainer');
+        container.innerHTML = '';
+        
+        // Call addInputSlot with 'false' to prevent focusing
+        addInputSlot("", false); 
+
+        // Clear results
+        document.getElementById('multiResult').innerHTML = '';
+        document.getElementById('totalPrize').innerHTML = '';
+        
+        // Clear scanned memory
+        scannedNumbers = [];
+    }
 
     // --- Load data from API ---
     async function loadAndDisplayResults() {
@@ -481,7 +456,7 @@
             if (!response.ok) throw new Error("API failed");
             
             const rawData = await response.json();
-            if (rawData.status !== 'success') throw new Error("API status not success");
+            if (rawData.status !== 'success') throw new Error("API did not return success");
             
             const apiResponse = rawData.response;
             apiLottoDate = apiResponse.date;
@@ -522,11 +497,25 @@
         } catch (err) {
             console.error(err);
             document.getElementById("prize-summary").style.display = 'none';
-            document.getElementById("prize-date").innerHTML = '<span style="color:red;">โหลดผลไม่ได้</span>';
+            document.getElementById("prize-date").innerHTML = 
+                '<span style="color: var(--prize-first-color);">โหลดผลรางวัลอัตโนมัติไม่สำเร็จ!</span>';
+            loadLocalPrizeFile();
         }
     }
 
-    // --- Check Logic ---
+    async function loadLocalPrizeFile() {
+        try {
+            const response = await fetch(`prizes.json?t=${new Date().getTime()}`);
+            if (!response.ok) throw new Error("No local file");
+            const data = await response.json();
+            winningData = data;
+            apiLottoDate = data.date || "-";
+            document.getElementById("prize-date").innerText = `(ไฟล์: ${apiLottoDate})`;
+        } catch (localErr) {
+            console.error(localErr);
+        }
+    }
+
     function getCheckResult(num) {
         let data = winningData;
         if (!data) return "ข้อมูลรางวัลยังไม่โหลด";
@@ -549,12 +538,30 @@
         return "❌ ไม่ถูกรางวัล";
     }
 
+    // --- UPDATED: addInputSlot with autoFocus parameter ---
+    function addInputSlot(initialValue = "", autoFocus = true) {
+        const container = document.getElementById('multiInputContainer');
+        
+        const newInput = document.createElement('input');
+        newInput.type = 'text';
+        newInput.maxLength = 6;
+        newInput.placeholder = 'กรอกเลข 6 หลัก';
+        newInput.className = 'multi-input';
+        newInput.value = initialValue; 
+        
+        container.appendChild(newInput);
+        
+        // Only focus if autoFocus is true
+        if (autoFocus) {
+            newInput.focus(); 
+        }
+    }
+
     function checkAllSlots() {
         const resultEl = document.getElementById("multiResult");
         const totalEl = document.getElementById("totalPrize"); 
-        
         if (!winningData) {
-            alert("กำลังโหลดผลรางวัล... กรุณารอสักครู่");
+            resultEl.innerHTML = "กำลังโหลดผลรางวัล... กรุณาลองอีกครั้ง";
             return;
         }
 
@@ -571,7 +578,8 @@
             }
         });
 
-        // Logic to show results immediately but also prep for new input
+        let uniqueNumbers = [...new Set(numbersToCheck)];
+
         let resultsHTML = "";
         let totalMoney = 0;
         const prizeAmount = {
@@ -579,22 +587,23 @@
             prize4: 40000, prize5: 20000, front3: 4000, last3: 4000, last2: 2000
         };
 
-        numbersToCheck.forEach(num => {
+        uniqueNumbers.forEach(num => {
             let result = getCheckResult(num);
             if (result.includes("❌")) {
                 resultsHTML += `<div class="res-line res-lose"><strong>${num}</strong>: ${result}</div>`;
             } else {
                 resultsHTML += `<div class="res-line res-win"><strong>${num}</strong>: ${result}</div>`;
-                // Simple prize adding logic
-                if(result.includes("รางวัลที่ 1!")) totalMoney += prizeAmount.firstPrize;
-                else if(result.includes("ข้างเคียง")) totalMoney += prizeAmount.nearby;
-                else if(result.includes("รางวัลที่ 2")) totalMoney += prizeAmount.prize2;
-                else if(result.includes("รางวัลที่ 3")) totalMoney += prizeAmount.prize3;
-                else if(result.includes("รางวัลที่ 4")) totalMoney += prizeAmount.prize4;
-                else if(result.includes("รางวัลที่ 5")) totalMoney += prizeAmount.prize5;
-                else if(result.includes("หน้า 3 ตัว")) totalMoney += prizeAmount.front3;
-                else if(result.includes("ท้าย 3 ตัว")) totalMoney += prizeAmount.last3;
-                else if(result.includes("ท้าย 2 ตัว")) totalMoney += prizeAmount.last2;
+                switch(result) {
+                    case "🎉 ถูกรางวัลที่ 1!": totalMoney += prizeAmount.firstPrize; break;
+                    case "✨ ถูกรางวัลข้างเคียงรางวัลที่ 1!": totalMoney += prizeAmount.nearby; break;
+                    case "🎉 ถูกรางวัลที่ 2!": totalMoney += prizeAmount.prize2; break;
+                    case "🎉 ถูกรางวัลที่ 3!": totalMoney += prizeAmount.prize3; break;
+                    case "🎉 ถูกรางวัลที่ 4!": totalMoney += prizeAmount.prize4; break;
+                    case "🎉 ถูกรางวัลที่ 5!": totalMoney += prizeAmount.prize5; break;
+                    case "🎉 ถูกรางวัลเลขหน้า 3 ตัว!": totalMoney += prizeAmount.front3; break;
+                    case "🎉 ถูกรางวัลเลขท้าย 3 ตัว!": totalMoney += prizeAmount.last3; break;
+                    case "🎉 ถูกรางวัลเลขท้าย 2 ตัว!": totalMoney += prizeAmount.last2; break;
+                }
             }
         });
 
@@ -602,58 +611,18 @@
             resultsHTML += `<div class="res-line res-invalid">${num} (เลขไม่ถูกต้อง)</div>`;
         });
 
-        if (resultsHTML !== "") {
-            resultEl.style.display = "block";
-            resultEl.innerHTML = resultsHTML;
-        } else {
-            resultEl.style.display = "none";
-        }
-
+        resultEl.innerHTML = resultsHTML;
         if (totalMoney > 0) {
             totalEl.innerHTML = `💰 รางวัลรวม: ${totalMoney.toLocaleString()} บาท`;
         } else {
             totalEl.innerHTML = "";
         }
 
-        // ===========================================
-        // === FIX: Clear old inputs, Add 1 fresh slot, Focus it ===
-        // ===========================================
-        const container = document.getElementById('multiInputContainer');
-        container.innerHTML = ''; // Remove all previous input boxes
-        addInputSlot(); // Add one fresh box and focus it
+        // Clean up inputs, leave one empty slot
+        inputs.forEach(input => input.remove());
+        addInputSlot();
     }
 
-    // --- NEW: Reset Function ---
-    function resetApp() {
-        document.getElementById("multiResult").innerHTML = "";
-        document.getElementById("multiResult").style.display = "none";
-        document.getElementById("totalPrize").innerHTML = "";
-        
-        const container = document.getElementById('multiInputContainer');
-        container.innerHTML = ''; 
-        addInputSlot(); // Start fresh
-    }
-    
-    function addInputSlot(initialValue = "") {
-        const container = document.getElementById('multiInputContainer');
-        const newInput = document.createElement('input');
-        newInput.type = 'number';
-        newInput.pattern = '\\d*';
-        newInput.inputMode = 'numeric';
-        newInput.maxLength = 6;
-        newInput.placeholder = 'กรอกเลข 6 หลัก';
-        newInput.className = 'multi-input';
-        newInput.value = initialValue; 
-        
-        container.appendChild(newInput);
-        
-        // Auto focus only if it's empty (manual typing)
-        if (initialValue === "") {
-            newInput.focus();
-        }
-    }
-
-    // Initialize
     window.onload = loadAndDisplayResults;
 </script>
 
